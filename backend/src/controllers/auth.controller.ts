@@ -5,7 +5,7 @@ import { query } from '../db.js';
 import { createError } from '../middleware/error.middleware.js';
 import { AuthRequest } from '../middleware/auth.middleware.js';
 
-const signToken = (payload: { id: string; email: string; name: string }) => {
+const signToken = (payload: { id: string; email: string; name: string; is_admin: boolean }) => {
     const secret = process.env.JWT_SECRET!;
     const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
     return jwt.sign(payload, secret, { expiresIn } as jwt.SignOptions);
@@ -34,18 +34,18 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         const passwordHash = await bcrypt.hash(password, 12);
 
         const result = await query(
-            'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, created_at',
+            'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, is_admin, created_at',
             [name, email, passwordHash]
         );
 
         const user = result.rows[0];
-        const token = signToken({ id: user.id, email: user.email, name: user.name });
+        const token = signToken({ id: user.id, email: user.email, name: user.name, is_admin: user.is_admin });
         setCookieToken(res, token);
 
         res.status(201).json({
             success: true,
             token,
-            user: { id: user.id, name: user.name, email: user.email, createdAt: user.created_at },
+            user: { id: user.id, name: user.name, email: user.email, is_admin: user.is_admin, createdAt: user.created_at },
         });
     } catch (err) {
         next(err);
@@ -57,20 +57,20 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     try {
         const { email, password } = req.body;
 
-        const result = await query('SELECT id, name, email, password_hash FROM users WHERE email = $1', [email]);
+        const result = await query('SELECT id, name, email, password_hash, is_admin FROM users WHERE email = $1', [email]);
         const user = result.rows[0];
 
         if (!user || !(await bcrypt.compare(password, user.password_hash))) {
             throw createError('Invalid email or password', 401);
         }
 
-        const token = signToken({ id: user.id, email: user.email, name: user.name });
+        const token = signToken({ id: user.id, email: user.email, name: user.name, is_admin: user.is_admin });
         setCookieToken(res, token);
 
         res.json({
             success: true,
             token,
-            user: { id: user.id, name: user.name, email: user.email },
+            user: { id: user.id, name: user.name, email: user.email, is_admin: user.is_admin },
         });
     } catch (err) {
         next(err);
@@ -87,7 +87,7 @@ export const logout = (_req: Request, res: Response) => {
 export const getMe = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const result = await query(
-            'SELECT id, name, email, created_at FROM users WHERE id = $1',
+            'SELECT id, name, email, is_admin, created_at FROM users WHERE id = $1',
             [req.user!.id]
         );
         const user = result.rows[0];

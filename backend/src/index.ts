@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -10,14 +11,19 @@ dotenv.config();
 import authRoutes from './routes/auth.routes.js';
 import conversationRoutes from './routes/conversations.routes.js';
 import messageRoutes from './routes/messages.routes.js';
+import audioRoutes from './routes/audio.routes.js';
+import journalRoutes from './routes/journal.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 // Middleware imports
 import { errorHandler } from './middleware/error.middleware.js';
+import { sanitizeInputs, apiLimiter } from './middleware/security.middleware.js';
 
 const app: Application = express();
 const PORT = process.env.PORT || 3001;
 
 // ─── Core Middleware ──────────────────────────────────────────────────────────
+app.use(helmet()); // Set security HTTP headers
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
@@ -25,6 +31,10 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(sanitizeInputs); // Sanitize inputs against XSS
+
+// Apply global rate limiter
+app.use('/api/', apiLimiter);
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 app.get('/api/health', (_req: Request, res: Response) => {
@@ -45,6 +55,8 @@ app.get('/', (_req: Request, res: Response) => {
             auth: '/api/auth/*',
             conversations: '/api/conversations/*',
             messages: '/api/messages/*',
+            audio: '/api/audio/*',
+            journal: '/api/journal/*',
         },
     });
 });
@@ -52,6 +64,9 @@ app.get('/', (_req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/audio', audioRoutes);
+app.use('/api/journal', journalRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ─── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);

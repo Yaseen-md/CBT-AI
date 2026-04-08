@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="#features"><img src="https://img.shields.io/badge/Phase_1-Complete-brightgreen?style=flat-square" alt="Phase 1 Complete"/></a>
+  <a href="#features"><img src="https://img.shields.io/badge/Phase_5-Complete-brightgreen?style=flat-square" alt="Phase 5 Complete"/></a>
   <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js"/>
   <img src="https://img.shields.io/badge/Express-5-000000?style=flat-square&logo=express" alt="Express"/>
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript"/>
@@ -175,8 +175,8 @@ npm run dev
 | `users` | Authentication & user profiles | ✅ Active |
 | `conversations` | Chat session metadata | ✅ Active |
 | `messages` | Chat message history | ✅ Active |
-| `memories` | Journal entries & session summaries | ⏳ Phase 3 |
-| `safety_events` | Crisis detection audit logs | ⏳ Phase 4 |
+| `memories` | Journal entries & session summaries | ✅ Active |
+| `safety_events` | Crisis detection audit logs | ✅ Active |
 
 ---
 
@@ -199,11 +199,11 @@ npm run dev
 |-------|-------------|--------|
 | **Phase 0** | Project Setup & Infrastructure | ✅ Complete |
 | **Phase 1** | Authentication & Basic Chat | ✅ Complete |
-| **Phase 2** | Voice Recording & Whisper Integration | 🔲 Planned |
-| **Phase 3** | Memory & Journaling System | 🔲 Planned |
-| **Phase 4** | Crisis Detection & Safety System | 🔲 Planned |
-| **Phase 5** | Admin Dashboard & Testing | 🔲 Planned |
-| **Phase 6** | Vector Memory, Scaling & Deployment | 🔲 Planned |
+| **Phase 2** | Voice Recording & Whisper Integration | ✅ Complete |
+| **Phase 3** | Memory & Journaling System | ✅ Complete |
+| **Phase 4** | Crisis Detection & Safety System | ✅ Complete |
+| **Phase 5** | Admin Dashboard & Testing | ✅ Complete |
+| **Phase 6** | Vector Memory, Scaling & Deployment | ⏳ In Progress |
 
 ---
 

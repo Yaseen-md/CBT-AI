@@ -7,6 +7,7 @@ export interface AuthRequest extends Request {
         id: string;
         email: string;
         name: string;
+        is_admin: boolean;
     };
 }
 
@@ -26,7 +27,7 @@ export const requireAuth = (req: AuthRequest, _res: Response, next: NextFunction
             throw createError('Server configuration error', 500);
         }
 
-        const decoded = jwt.verify(token, secret) as { id: string; email: string; name: string };
+        const decoded = jwt.verify(token, secret) as { id: string; email: string; name: string; is_admin: boolean };
         req.user = decoded;
         next();
     } catch (err: any) {
@@ -36,4 +37,12 @@ export const requireAuth = (req: AuthRequest, _res: Response, next: NextFunction
             next(err);
         }
     }
+};
+
+export const requireAdmin = (req: AuthRequest, _res: Response, next: NextFunction) => {
+    // Rely on requireAuth having been run first
+    if (!req.user || !req.user.is_admin) {
+        return next(createError('Forbidden: Admin access required', 403));
+    }
+    next();
 };

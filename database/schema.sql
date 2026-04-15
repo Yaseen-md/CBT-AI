@@ -22,6 +22,7 @@ CREATE TABLE users (
     crisis_count INTEGER DEFAULT 0,
     is_admin BOOLEAN DEFAULT false,
     google_id VARCHAR(255) UNIQUE,
+    has_consented BOOLEAN DEFAULT false,
     last_login TIMESTAMP WITH TIME ZONE
 );
 
@@ -107,6 +108,81 @@ CREATE INDEX idx_safety_events_created_at ON safety_events(created_at DESC);
 CREATE INDEX idx_safety_events_resolved ON safety_events(resolved);
 
 -- ============================================
+-- CLINICAL TABLES
+-- ============================================
+
+-- thought_records: Core CBT 7-column worksheet
+CREATE TABLE thought_records (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    conversation_id UUID REFERENCES conversations(id) ON DELETE SET NULL,
+    situation TEXT NOT NULL,
+    emotion_before VARCHAR(100) NOT NULL,
+    emotion_before_rating INTEGER CHECK (emotion_before_rating BETWEEN 0 AND 100),
+    automatic_thought TEXT NOT NULL,
+    evidence_for TEXT,
+    evidence_against TEXT,
+    balanced_thought TEXT,
+    emotion_after VARCHAR(100),
+    emotion_after_rating INTEGER CHECK (emotion_after_rating BETWEEN 0 AND 100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- phq9_responses: Depression screening (validated, public domain)
+CREATE TABLE phq9_responses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    scores INTEGER[] NOT NULL CHECK (array_length(scores, 1) = 9),
+    total_score INTEGER NOT NULL CHECK (total_score BETWEEN 0 AND 27),
+    severity_label VARCHAR(30) NOT NULL,
+    taken_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- gad7_responses: Anxiety screening (validated, public domain)
+CREATE TABLE gad7_responses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    scores INTEGER[] NOT NULL CHECK (array_length(scores, 1) = 7),
+    total_score INTEGER NOT NULL CHECK (total_score BETWEEN 0 AND 21),
+    severity_label VARCHAR(30) NOT NULL,
+    taken_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- safety_plans: Stanley-Brown Safety Planning (6 steps)
+CREATE TABLE safety_plans (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    warning_signs TEXT[],
+    internal_coping TEXT[],
+    social_distractors TEXT[],
+    support_contacts JSONB DEFAULT '[]',
+    professional_contacts JSONB DEFAULT '[]',
+    environment_safety_steps TEXT[],
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- session_goals: Per-session goal tracking
+CREATE TABLE session_goals (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    conversation_id UUID REFERENCES conversations(id) ON DELETE SET NULL,
+    goal_text TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active','completed','deferred')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- mood_checkins: Daily mood tracking
+CREATE TABLE mood_checkins (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    mood_score INTEGER NOT NULL CHECK (mood_score BETWEEN 1 AND 10),
+    emotion_tags JSONB DEFAULT '[]',
+    note TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
 -- TRIGGERS FOR UPDATED_AT
 -- ============================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -124,6 +200,9 @@ CREATE TRIGGER update_conversations_updated_at BEFORE UPDATE ON conversations
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_memories_updated_at BEFORE UPDATE ON memories
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_safety_plans_updated_at BEFORE UPDATE ON safety_plans
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================

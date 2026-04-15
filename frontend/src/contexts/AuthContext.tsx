@@ -8,15 +8,18 @@ interface User {
     name: string;
     email: string;
     is_admin?: boolean;
+    has_consented?: boolean;
+    country?: string;
 }
 
 interface AuthContextType {
     user: User | null;
     token: string | null;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<void>;
-    register: (name: string, email: string, password: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<User>;
+    register: (name: string, email: string, password: string) => Promise<User>;
     logout: () => Promise<void>;
+    provideConsent: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -53,6 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem('cbt_token', data.token);
         setToken(data.token);
         setUser(data.user);
+        return data.user;
     }, []);
 
     const register = useCallback(async (name: string, email: string, password: string) => {
@@ -63,6 +67,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem('cbt_token', data.token);
         setToken(data.token);
         setUser(data.user);
+        return data.user;
     }, []);
 
     const logout = useCallback(async () => {
@@ -72,8 +77,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
     }, []);
 
+    const provideConsent = useCallback(async () => {
+        if (!token) return;
+        const data = await apiFetch<{ success: boolean; token: string; user: User }>('/api/auth/consent', {
+            method: 'POST',
+            token
+        });
+        localStorage.setItem('cbt_token', data.token);
+        setToken(data.token);
+        setUser(data.user);
+    }, [token]);
+
     return (
-        <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, provideConsent }}>
             {children}
         </AuthContext.Provider>
     );

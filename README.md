@@ -30,9 +30,11 @@
 
 ### Core Functionality
 - **AI-Powered CBT Sessions** — Real-time therapeutic conversations using OpenAI GPT-4o-mini with a carefully crafted CBT system prompt
+- **RAG Knowledge Base** — Dynamically injects evidence-based clinical concepts (like the 15 cognitive distortions) into the AI's context based on conversation.
 - **Thought Challenging** — Guided Socratic questioning to identify cognitive distortions
 - **Session Persistence** — Full conversation history with session management
-- **Secure Authentication** — JWT-based auth with bcrypt password hashing and HTTP-only cookies
+- **Clinical Toolkit** — Built-in Standardized Thought Records, Daily Mood Check-ins, and validated PHQ-9 (Depression) / GAD-7 (Anxiety) Screeners.
+- **Secure Authentication & Consent** — JWT-based auth with bcrypt password hashing, HTTP-only cookies, and Mandatory Informed Consent route-guards.
 
 ### User Experience
 - **Modern Dashboard** — Quick access to sessions, conversation history, and CBT tools
@@ -177,6 +179,11 @@ npm run dev
 | `messages` | Chat message history | ✅ Active |
 | `memories` | Journal entries & session summaries | ✅ Active |
 | `safety_events` | Crisis detection audit logs | ✅ Active |
+| `thought_records` | Structured Cognitive Restructuring | ✅ Active |
+| `mood_checkins` | Daily mood tracking & emotion tagging | ✅ Active |
+| `phq9_responses` | Validated depression screening | ✅ Active |
+| `gad7_responses` | Validated anxiety screening | ✅ Active |
+| `safety_plans` | Stanley-Brown Safety Planning | ⏳ Setup in DB |
 
 ---
 

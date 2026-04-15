@@ -53,9 +53,12 @@ export default function DashboardPage() {
     const [distortions, setDistortions] = useState<DistortionEntry[]>([]);
     const [loadingDistortions, setLoadingDistortions] = useState(true);
 
-    // Guard: redirect if not logged in
+    // Guard: redirect if not logged in or hasn't consented
     useEffect(() => {
-        if (!isLoading && !user) router.push('/login');
+        if (!isLoading) {
+            if (!user) router.push('/login');
+            else if (!user.has_consented) router.push('/consent');
+        }
     }, [user, isLoading, router]);
 
     // Fetch conversations

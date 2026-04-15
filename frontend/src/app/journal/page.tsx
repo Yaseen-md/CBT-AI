@@ -35,7 +35,10 @@ export default function JournalPage() {
 
     // Guard
     useEffect(() => {
-        if (!isLoading && !user) router.push('/login');
+        if (!isLoading) {
+            if (!user) router.push('/login');
+            else if (!user.has_consented) router.push('/consent');
+        }
     }, [user, isLoading, router]);
 
     // Fetch journal entries

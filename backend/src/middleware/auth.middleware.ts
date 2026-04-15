@@ -8,6 +8,7 @@ export interface AuthRequest extends Request {
         email: string;
         name: string;
         is_admin: boolean;
+        country?: string;
     };
 }
 
@@ -27,7 +28,7 @@ export const requireAuth = (req: AuthRequest, _res: Response, next: NextFunction
             throw createError('Server configuration error', 500);
         }
 
-        const decoded = jwt.verify(token, secret) as { id: string; email: string; name: string; is_admin: boolean };
+        const decoded = jwt.verify(token, secret) as { id: string; email: string; name: string; is_admin: boolean; country?: string };
         req.user = decoded;
         next();
     } catch (err: any) {

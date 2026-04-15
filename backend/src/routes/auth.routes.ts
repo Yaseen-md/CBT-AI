@@ -34,5 +34,6 @@ router.post(
 
 router.post('/logout', logout);
 router.get('/me', requireAuth, getMe);
+router.post('/consent', requireAuth, provideConsent);
 
 export default router;

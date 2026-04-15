@@ -18,8 +18,12 @@ export default function LoginPage() {
         setError('');
         setIsLoading(true);
         try {
-            await login(email, password);
-            router.push('/dashboard');
+            const user = await login(email, password);
+            if (user.has_consented) {
+                router.push('/dashboard');
+            } else {
+                router.push('/consent');
+            }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Login failed');
         } finally {

@@ -4,7 +4,7 @@ import { createError } from '../middleware/error.middleware.js';
 import { AuthRequest } from '../middleware/auth.middleware.js';
 import { generateReply, generateSessionSummary, Message } from '../services/openai.service.js';
 import { getRecentMemories, saveSessionSummary } from '../services/memory.service.js';
-import { detectCrisis, CRISIS_RESOURCES } from '../services/crisis.service.js';
+import { detectCrisis, getCrisisResources } from '../services/crisis.service.js';
 import { logSafetyEvent } from '../services/safety.service.js';
 
 /**
@@ -38,6 +38,7 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
     try {
         const { conversationId, content } = req.body;
         const userId = req.user!.id;
+        const userCountry = req.user!.country;
 
         // Verify conversation belongs to user
         const convResult = await query(
@@ -61,12 +62,18 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
                 console.error('Failed to log safety event:', err);
             }
 
-            // Build crisis response data for frontend
+            // Build country-aware crisis response data for frontend
             if (crisisResult.requiresImmediateAction) {
+                const crisisResources = getCrisisResources(userCountry);
                 crisisData = {
                     severity: crisisResult.severity,
-                    resources: CRISIS_RESOURCES.resources,
-                    banner: CRISIS_RESOURCES.banner,
+                    crisisType: crisisResult.crisisType,
+                    requiresPsychiatricEscalation: crisisResult.requiresPsychiatricEscalation,
+                    resources: crisisResources.resources,
+                    banner: crisisResources.banner,
+                    psychiatricNote: crisisResult.requiresPsychiatricEscalation
+                        ? crisisResources.psychiatricNote
+                        : undefined,
                 };
             }
         }

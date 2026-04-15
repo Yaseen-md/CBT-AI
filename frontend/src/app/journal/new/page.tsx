@@ -17,8 +17,9 @@ export default function NewJournalPage() {
     const [error, setError] = useState('');
 
     // Guard
-    if (!isLoading && !user) {
-        router.push('/login');
+    if (!isLoading) {
+        if (!user) router.push('/login');
+        else if (!user.has_consented) router.push('/consent');
     }
 
     const addTag = (tag: string) => {

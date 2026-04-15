@@ -23,8 +23,12 @@ export default function SignupPage() {
         }
         setIsLoading(true);
         try {
-            await register(name, email, password);
-            router.push('/dashboard');
+            const user = await register(name, email, password);
+            if (user.has_consented) {
+                router.push('/dashboard');
+            } else {
+                router.push('/consent');
+            }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Registration failed');
         } finally {

@@ -56,6 +56,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         if (!isLoading) {
             if (!user) router.push('/login');
+            else if (!user.has_consented) router.push('/consent');
             else if (!user.is_admin) router.push('/dashboard');
         }
     }, [user, isLoading, router]);

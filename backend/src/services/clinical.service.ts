@@ -129,3 +129,48 @@ export const getGad7ScoresByUser = async (userId: string, limit = 10) => {
     );
     return result.rows;
 };
+
+// --- SAFETY PLANS ---
+
+export interface ContactInfo {
+    name: string;
+    phone: string;
+    description?: string;
+}
+
+export interface CreateSafetyPlanInput {
+    user_id: string;
+    warning_signs?: string[];
+    internal_coping?: string[];
+    social_distractors?: string[];
+    support_contacts?: ContactInfo[];
+    professional_contacts?: ContactInfo[];
+    environment_safety_steps?: string[];
+}
+
+export const createSafetyPlan = async (input: CreateSafetyPlanInput) => {
+    const result = await query(
+        `INSERT INTO safety_plans (
+            user_id, warning_signs, internal_coping, social_distractors, 
+            support_contacts, professional_contacts, environment_safety_steps
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [
+            input.user_id,
+            input.warning_signs || [],
+            input.internal_coping || [],
+            input.social_distractors || [],
+            JSON.stringify(input.support_contacts || []),
+            JSON.stringify(input.professional_contacts || []),
+            input.environment_safety_steps || []
+        ]
+    );
+    return result.rows[0];
+};
+
+export const getSafetyPlansByUser = async (userId: string, limit = 5) => {
+    const result = await query(
+        `SELECT * FROM safety_plans WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`,
+        [userId, limit]
+    );
+    return result.rows;
+};

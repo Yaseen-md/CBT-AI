@@ -8,7 +8,9 @@ import {
     submitPhq9,
     listPhq9Scores,
     submitGad7,
-    listGad7Scores
+    listGad7Scores,
+    submitSafetyPlan,
+    listSafetyPlans
 } from '../controllers/clinical.controller.js';
 
 const router = Router();
@@ -31,5 +33,9 @@ router.get('/assessments/phq9', listPhq9Scores);
 // Assessments (GAD-7)
 router.post('/assessments/gad7', submitGad7);
 router.get('/assessments/gad7', listGad7Scores);
+
+// Safety Plans
+router.post('/safety-plans', submitSafetyPlan);
+router.get('/safety-plans', listSafetyPlans);
 
 export default router;

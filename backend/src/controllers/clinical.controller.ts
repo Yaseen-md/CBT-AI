@@ -9,7 +9,9 @@ import {
     createPhq9Response,
     getPhq9ScoresByUser,
     createGad7Response,
-    getGad7ScoresByUser
+    getGad7ScoresByUser,
+    createSafetyPlan,
+    getSafetyPlansByUser
 } from '../services/clinical.service.js';
 
 // --- THOUGHT RECORDS ---
@@ -107,6 +109,29 @@ export const listGad7Scores = async (req: AuthRequest, res: Response, next: Next
         const limit = parseInt(req.query.limit as string) || 10;
         const scores = await getGad7ScoresByUser(userId, limit);
         res.json({ success: true, scores });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// --- SAFETY PLANS ---
+
+export const submitSafetyPlan = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user!.id;
+        const plan = await createSafetyPlan({ ...req.body, user_id: userId });
+        res.status(201).json({ success: true, plan });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const listSafetyPlans = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user!.id;
+        const limit = parseInt(req.query.limit as string) || 5;
+        const plans = await getSafetyPlansByUser(userId, limit);
+        res.json({ success: true, plans });
     } catch (err) {
         next(err);
     }

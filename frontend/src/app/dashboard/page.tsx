@@ -210,6 +210,33 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
+                {/* Clinical Toolkit Section */}
+                <div className="mb-10">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Clinical Toolkit</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <Link href="/tools/mood-checkin" className="bg-white/80 border border-gray-100 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition-all text-center">
+                            <div className="text-3xl mb-2">📊</div>
+                            <p className="font-medium text-sm text-gray-800">Mood Check-in</p>
+                        </Link>
+                        <Link href="/tools/thought-record" className="bg-white/80 border border-gray-100 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition-all text-center">
+                            <div className="text-3xl mb-2">📝</div>
+                            <p className="font-medium text-sm text-gray-800">Thought Record</p>
+                        </Link>
+                        <Link href="/tools/phq9" className="bg-white/80 border border-gray-100 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition-all text-center">
+                            <div className="text-3xl mb-2">📋</div>
+                            <p className="font-medium text-sm text-gray-800">PHQ-9 (Depression)</p>
+                        </Link>
+                        <Link href="/tools/gad7" className="bg-white/80 border border-gray-100 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition-all text-center">
+                            <div className="text-3xl mb-2">📋</div>
+                            <p className="font-medium text-sm text-gray-800">GAD-7 (Anxiety)</p>
+                        </Link>
+                        <Link href="/tools/safety-plan" className="bg-white/80 border border-gray-100 rounded-xl p-4 hover:border-red-300 hover:shadow-md transition-all text-center">
+                            <div className="text-3xl mb-2">🛡️</div>
+                            <p className="font-medium text-sm text-red-600">Safety Plan</p>
+                        </Link>
+                    </div>
+                </div>
+
                 {/* Two-column layout for Sessions + Journal */}
                 <div className="grid lg:grid-cols-3 gap-8 mb-10">
                     {/* Recent Sessions — takes 2 cols */}

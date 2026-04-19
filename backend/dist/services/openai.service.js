@@ -1,11 +1,9 @@
 import OpenAI from 'openai';
 import { RagService } from './rag.service';
-
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
     baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
 });
-
 const CBT_SYSTEM_PROMPT = `You are a compassionate, evidence-based AI CBT (Cognitive Behavioral Therapy) assistant. Your role is to guide users through structured self-reflection using CBT principles.
 
 **CLINICAL & SAFETY BOUNDARIES (CRITICAL):**
@@ -27,44 +25,30 @@ const CBT_SYSTEM_PROMPT = `You are a compassionate, evidence-based AI CBT (Cogni
 3. **Skill Application:** Help identify cognitive distortions (e.g., catastrophizing, black-and-white thinking) and gently challenge them. Use grounding exercises for acute anxiety.
 4. **Comorbidity Awareness:** Recognize that depression and anxiety frequently co-occur (e.g., 60% of cases). Adjust your approach by addressing withdrawal behaviors (depression) and avoidance behaviors (anxiety) appropriately.
 5. **Tone:** Be warm, empathetic, validating, and speak like a supportive coach/therapist. Keep responses concise (1-3 paragraphs) to avoid overwhelming the user.`;
-
-export interface Message {
-    role: 'user' | 'assistant';
-    content: string;
-}
-
 /**
  * Generates a CBT-focused AI reply given the conversation history.
  * Only sends the last 10 messages to control token usage.
  * Optionally injects memory context (journal entries, past summaries) into the system prompt.
  * Also automatically injects RAG context from clinical knowledge base.
  */
-export const generateReply = async (
-    messages: Message[],
-    memoryContext?: string
-): Promise<string> => {
+export const generateReply = async (messages, memoryContext) => {
     const contextWindow = messages.slice(-10); // Cost control: last 10 msgs only
-
     // 1. Gather recent user input for RAG
     const recentUserMessages = contextWindow
         .filter(m => m.role === 'user')
         .slice(-3) // look closely at the last 3 user messages
         .map(m => m.content)
         .join(' ');
-        
     // 2. Query RAG service
     const ragEntries = RagService.getRelevantContext(recentUserMessages, 2);
     const ragContext = RagService.formatContextForLLM(ragEntries);
-
     let systemPrompt = CBT_SYSTEM_PROMPT;
     if (ragContext) {
         systemPrompt += ragContext;
     }
-    
     if (memoryContext) {
         systemPrompt += `\n\n**USER'S PREVIOUS CONTEXT (from past sessions and journal):**\n${memoryContext}\n\nUse this context to provide more personalized and continuous care. Reference past insights naturally when relevant, but don't force it.`;
     }
-
     const response = await openai.chat.completions.create({
         model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
         max_tokens: parseInt(process.env.OPENAI_MAX_TOKENS || '500'),
@@ -74,24 +58,12 @@ export const generateReply = async (
             ...contextWindow,
         ],
     });
-
     const reply = response.choices[0]?.message?.content;
-    if (!reply) throw new Error('No response from OpenAI');
+    if (!reply)
+        throw new Error('No response from OpenAI');
     return reply;
 };
-
-/**
- * Generate a session summary with cognitive distortion identification.
- * Called when a conversation ends or reaches a threshold.
- */
-export interface SessionSummaryResult {
-    summary: string;
-    distortions: string[];
-}
-
-export const generateSessionSummary = async (
-    messages: Message[]
-): Promise<SessionSummaryResult> => {
+export const generateSessionSummary = async (messages) => {
     const summaryPrompt = `You are a clinical CBT analyst. Analyze the following therapy conversation and respond in VALID JSON format only.
 
 Your response must be exactly this JSON structure (no markdown, no code fences):
@@ -115,12 +87,10 @@ Common cognitive distortions to look for:
 - Labeling
 
 If no clear distortions are found, return an empty array for "distortions".`;
-
     const conversationText = messages
         .slice(-20) // Analyze last 20 messages max
         .map((m) => `${m.role === 'user' ? 'User' : 'Therapist'}: ${m.content}`)
         .join('\n');
-
     const response = await openai.chat.completions.create({
         model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
         max_tokens: 300,
@@ -130,10 +100,9 @@ If no clear distortions are found, return an empty array for "distortions".`;
             { role: 'user', content: conversationText },
         ],
     });
-
     const rawReply = response.choices[0]?.message?.content;
-    if (!rawReply) throw new Error('No response from OpenAI for summary');
-
+    if (!rawReply)
+        throw new Error('No response from OpenAI for summary');
     try {
         // Clean the response — strip markdown fences if present
         const cleaned = rawReply.replace(/```json?\n?/g, '').replace(/```\n?/g, '').trim();
@@ -142,7 +111,8 @@ If no clear distortions are found, return an empty array for "distortions".`;
             summary: parsed.summary || 'Session summary unavailable.',
             distortions: Array.isArray(parsed.distortions) ? parsed.distortions : [],
         };
-    } catch {
+    }
+    catch {
         // Fallback if JSON parsing fails
         return {
             summary: rawReply.substring(0, 500),
@@ -150,19 +120,17 @@ If no clear distortions are found, return an empty array for "distortions".`;
         };
     }
 };
-
 /**
  * Generates an embedding vector for a given text using OpenAI's embedding models.
  * Returns an array of numbers representing the text in vector space.
  */
-export const generateEmbedding = async (text: string): Promise<number[]> => {
+export const generateEmbedding = async (text) => {
     // Clean text: strip newlines
     const cleanedText = text.replace(/\n/g, ' ');
-    
     const response = await openai.embeddings.create({
         model: 'text-embedding-3-small',
         input: cleanedText,
     });
-    
     return response.data[0].embedding;
 };
+//# sourceMappingURL=openai.service.js.map

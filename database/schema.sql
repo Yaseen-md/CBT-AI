@@ -5,7 +5,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Enable pgvector extension for semantic search (Phase 6)
--- CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ============================================
 -- USER TABLE
@@ -75,8 +75,8 @@ CREATE TABLE memories (
     full_text TEXT,
     tags JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    -- vector VECTOR(1536) -- Uncomment for Phase 6 (pgvector)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    vector VECTOR(1536)
 );
 
 -- Index for faster user memory lookups

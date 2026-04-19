@@ -1,4 +1,5 @@
 import { query } from '../db.js';
+import { generateEmbedding } from './openai.service.js';
 
 export type MemoryType = 'journal' | 'summary' | 'fact' | 'cognitive-distortion-tag';
 
@@ -31,15 +32,27 @@ export interface UpdateMemoryInput {
  * Create a new memory entry
  */
 export const createMemory = async (input: CreateMemoryInput): Promise<Memory> => {
+    const textToEmbed = `${input.short_summary || ''} ${input.full_text || ''} ${input.tags?.join(' ') || ''}`.trim();
+    let vector: number[] | null = null;
+    
+    if (textToEmbed.length > 0) {
+        try {
+            vector = await generateEmbedding(textToEmbed);
+        } catch (e) {
+            console.error('Failed to generate embedding for memory', e);
+        }
+    }
+
     const result = await query(
-        `INSERT INTO memories (user_id, type, short_summary, full_text, tags)
-         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        `INSERT INTO memories (user_id, type, short_summary, full_text, tags, vector)
+         VALUES ($1, $2, $3, $4, $5, $6::vector) RETURNING *`,
         [
             input.user_id,
             input.type,
             input.short_summary || null,
             input.full_text || null,
             JSON.stringify(input.tags || []),
+            vector ? JSON.stringify(vector) : null,
         ]
     );
     return result.rows[0];
@@ -202,4 +215,31 @@ export const saveSessionSummary = async (
     }
 
     return { summary: summaryResult, distortionTags: distortionMemories };
+};
+
+/**
+ * Search memories by semantic similarity using pgvector
+ */
+export const searchSimilarMemories = async (
+    userId: string,
+    queryText: string,
+    limit: number = 3
+): Promise<Memory[]> => {
+    try {
+        const queryVector = await generateEmbedding(queryText);
+        
+        // Using cosine distance operator <=> from pgvector
+        const result = await query(
+            `SELECT *, 1 - (vector <=> $2::vector) as similarity 
+             FROM memories
+             WHERE user_id = $1 AND vector IS NOT NULL
+             ORDER BY vector <=> $2::vector
+             LIMIT $3`,
+            [userId, JSON.stringify(queryVector), limit]
+        );
+        return result.rows;
+    } catch (e) {
+        console.error('Semantic search failed, falling back to basic', e);
+        return [];
+    }
 };

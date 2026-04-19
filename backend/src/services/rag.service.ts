@@ -1,8 +1,16 @@
 import { cognitiveDistortions, KnowledgeEntry } from '../data/knowledge-base/distortions';
+import { conditions } from '../data/knowledge-base/conditions';
+import { worksheets } from '../data/knowledge-base/worksheets';
+import { psychoeducation } from '../data/knowledge-base/psychoeducation';
+import { medications } from '../data/knowledge-base/medications';
 
 // Combine all loaded knowledge bases here
 const allKnowledge: KnowledgeEntry[] = [
-    ...cognitiveDistortions
+    ...cognitiveDistortions,
+    ...conditions,
+    ...worksheets,
+    ...psychoeducation,
+    ...medications
 ];
 
 export class RagService {

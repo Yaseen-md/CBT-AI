@@ -136,3 +136,14 @@ export const listSafetyPlans = async (req: AuthRequest, res: Response, next: Nex
         next(err);
     }
 };
+
+export const getLatestSafetyPlan = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user!.id;
+        const plans = await getSafetyPlansByUser(userId, 1);
+        const plan = plans.length > 0 ? plans[0] : null;
+        res.json({ success: true, plan });
+    } catch (err) {
+        next(err);
+    }
+};

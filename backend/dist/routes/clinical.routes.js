@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.middleware.js';
-import { submitThoughtRecord, listThoughtRecords, submitMoodCheckin, listMoodCheckins, submitPhq9, listPhq9Scores, submitGad7, listGad7Scores, submitSafetyPlan, listSafetyPlans } from '../controllers/clinical.controller.js';
+import { submitThoughtRecord, listThoughtRecords, submitMoodCheckin, listMoodCheckins, submitPhq9, listPhq9Scores, submitGad7, listGad7Scores, submitSafetyPlan, listSafetyPlans, getLatestSafetyPlan } from '../controllers/clinical.controller.js';
 const router = Router();
 // All clinical routes require authentication
 router.use(requireAuth);
@@ -19,5 +19,6 @@ router.get('/assessments/gad7', listGad7Scores);
 // Safety Plans
 router.post('/safety-plans', submitSafetyPlan);
 router.get('/safety-plans', listSafetyPlans);
+router.get('/safety-plan/latest', getLatestSafetyPlan);
 export default router;
 //# sourceMappingURL=clinical.routes.js.map

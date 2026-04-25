@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
-import { submitSafetyPlan, SafetyPlanData, ContactInfo } from '@/services/clinical.service';
+import { submitSafetyPlan, getSafetyPlan, SafetyPlanData, ContactInfo } from '@/services/clinical.service';
 
 export default function SafetyPlanPage() {
     const { user, isLoading } = useAuth();
@@ -12,6 +12,25 @@ export default function SafetyPlanPage() {
 
     const [step, setStep] = useState(1);
     const [submitting, setSubmitting] = useState(false);
+    const [loadingPlan, setLoadingPlan] = useState(true);
+    const [existingPlan, setExistingPlan] = useState<any | null>(null);
+    const [viewMode, setViewMode] = useState<'create' | 'view'>('create');
+
+    useEffect(() => {
+        const fetchExistingPlan = async () => {
+            try {
+                const response = await getSafetyPlan();
+                if (response.plan) {
+                    setExistingPlan(response.plan);
+                }
+            } catch (err) {
+                console.error('Error fetching existing safety plan:', err);
+            } finally {
+                setLoadingPlan(false);
+            }
+        };
+        fetchExistingPlan();
+    }, []);
 
     // Arrays of strings
     const [warningSigns, setWarningSigns] = useState<string[]>(['']);
@@ -35,6 +54,136 @@ export default function SafetyPlanPage() {
         return (
             <div className="min-h-screen bg-slate-50 flex justify-center items-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+            </div>
+        );
+    }
+
+    if (loadingPlan) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex justify-center items-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600 mx-auto mb-4"></div>
+                    <p className="text-slate-600">Loading your safety plan...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // View Mode: Display existing safety plan
+    if (viewMode === 'view' && existingPlan) {
+        return (
+            <div className="min-h-screen bg-slate-50">
+                <header className="bg-white/80 backdrop-blur-sm border-b border-slate-100 sticky top-0 z-10">
+                    <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+                        <Link href="/dashboard" className="text-primary-600 font-medium hover:text-primary-700">
+                            &larr; Back to Dashboard
+                        </Link>
+                        <button
+                            onClick={() => setViewMode('create')}
+                            className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition"
+                        >
+                            Create New Plan
+                        </button>
+                    </div>
+                </header>
+
+                <main className="max-w-4xl mx-auto px-4 py-8 sm:px-6">
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="px-6 py-8 sm:p-10">
+                            <div className="mb-8 text-center">
+                                <div className="w-16 h-16 mx-auto bg-teal-100 rounded-full flex items-center justify-center mb-4">
+                                    <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                </div>
+                                <h1 className="text-3xl font-bold text-slate-900 mb-2">My Safety Plan</h1>
+                                <p className="text-slate-600">Created on {new Date(existingPlan.created_at).toLocaleDateString()}</p>
+                            </div>
+
+                            <div className="space-y-6">
+                                {/* Step 1 */}
+                                <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                                    <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                        <span className="w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-sm">1</span>
+                                        Warning Signs
+                                    </h3>
+                                    <ul className="list-disc list-inside space-y-1 text-slate-700 ml-8">
+                                        {existingPlan.warning_signs?.map((sign: string, i: number) => <li key={i}>{sign}</li>)}
+                                    </ul>
+                                </div>
+
+                                {/* Step 2 */}
+                                <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                                    <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                        <span className="w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-sm">2</span>
+                                        Internal Coping Strategies
+                                    </h3>
+                                    <ul className="list-disc list-inside space-y-1 text-slate-700 ml-8">
+                                        {existingPlan.internal_coping?.map((strategy: string, i: number) => <li key={i}>{strategy}</li>)}
+                                    </ul>
+                                </div>
+
+                                {/* Step 3 */}
+                                <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                                    <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                        <span className="w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-sm">3</span>
+                                        Social Distractions
+                                    </h3>
+                                    <ul className="list-disc list-inside space-y-1 text-slate-700 ml-8">
+                                        {existingPlan.social_distractors?.map((place: string, i: number) => <li key={i}>{place}</li>)}
+                                    </ul>
+                                </div>
+
+                                {/* Step 4 */}
+                                <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                                    <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                        <span className="w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-sm">4</span>
+                                        People I Can Ask For Help
+                                    </h3>
+                                    <ul className="space-y-2 text-slate-700 ml-8">
+                                        {existingPlan.support_contacts?.map((c: ContactInfo, i: number) => (
+                                            <li key={i} className="flex justify-between"><span>{c.name}</span> <span className="text-slate-500">{c.phone}</span></li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Step 5 */}
+                                <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                                    <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                        <span className="w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-sm">5</span>
+                                        Professionals & Agencies
+                                    </h3>
+                                    <ul className="space-y-2 text-slate-700 ml-8">
+                                        {existingPlan.professional_contacts?.map((c: ContactInfo, i: number) => (
+                                            <li key={i}>
+                                                <div className="font-medium">{c.name}</div>
+                                                <div className="text-sm text-slate-500">{c.phone} {c.description && `— ${c.description}`}</div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Step 6 */}
+                                <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                                    <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                                        <span className="w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-sm">6</span>
+                                        Making Environment Safe
+                                    </h3>
+                                    <ul className="list-disc list-inside space-y-1 text-slate-700 ml-8">
+                                        {existingPlan.environment_safety_steps?.map((step: string, i: number) => <li key={i}>{step}</li>)}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                <p className="text-sm text-amber-800">
+                                    <strong>Crisis Resources:</strong> In the US, call or text <strong>988</strong> for the Suicide & Crisis Lifeline.
+                                    For immediate emergencies, call <strong>911</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </main>
             </div>
         );
     }
@@ -93,7 +242,10 @@ export default function SafetyPlanPage() {
 
             await submitSafetyPlan(payload);
             alert('Safety Plan saved successfully!');
-            router.push('/dashboard');
+            // Refresh and switch to view mode
+            const response = await getSafetyPlan();
+            setExistingPlan(response.plan);
+            setViewMode('view');
         } catch (error) {
             console.error('Error saving safety plan:', error);
             alert('Failed to save safety plan.');
@@ -108,9 +260,17 @@ export default function SafetyPlanPage() {
                     <Link href="/dashboard" className="text-primary-600 font-medium hover:text-primary-700">
                         &larr; Back to Dashboard
                     </Link>
+                    {existingPlan && (
+                        <button
+                            onClick={() => setViewMode('view')}
+                            className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition"
+                        >
+                            View My Saved Plan
+                        </button>
+                    )}
                 </div>
             </header>
-            
+
             <main className="max-w-3xl mx-auto px-4 py-8 sm:px-6">
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div className="px-6 py-8 sm:p-10">

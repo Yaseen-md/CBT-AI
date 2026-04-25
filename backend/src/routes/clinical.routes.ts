@@ -10,7 +10,8 @@ import {
     submitGad7,
     listGad7Scores,
     submitSafetyPlan,
-    listSafetyPlans
+    listSafetyPlans,
+    getLatestSafetyPlan
 } from '../controllers/clinical.controller.js';
 
 const router = Router();
@@ -37,5 +38,6 @@ router.get('/assessments/gad7', listGad7Scores);
 // Safety Plans
 router.post('/safety-plans', submitSafetyPlan);
 router.get('/safety-plans', listSafetyPlans);
+router.get('/safety-plan/latest', getLatestSafetyPlan);
 
 export default router;

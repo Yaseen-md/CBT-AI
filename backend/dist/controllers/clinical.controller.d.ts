@@ -10,4 +10,5 @@ export declare const submitGad7: (req: AuthRequest, res: Response, next: NextFun
 export declare const listGad7Scores: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
 export declare const submitSafetyPlan: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
 export declare const listSafetyPlans: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
+export declare const getLatestSafetyPlan: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
 //# sourceMappingURL=clinical.controller.d.ts.map

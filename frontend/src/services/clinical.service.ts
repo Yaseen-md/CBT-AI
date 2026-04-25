@@ -97,3 +97,10 @@ export const getSafetyPlans = async () => {
         token: getToken(),
     });
 };
+
+// Get the user's latest safety plan
+export const getSafetyPlan = async () => {
+    return apiFetch<{ success: boolean; plan: any }>('/api/clinical/safety-plan/latest', {
+        token: getToken(),
+    });
+};

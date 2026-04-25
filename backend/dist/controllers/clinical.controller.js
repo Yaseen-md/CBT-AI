@@ -119,4 +119,15 @@ export const listSafetyPlans = async (req, res, next) => {
         next(err);
     }
 };
+export const getLatestSafetyPlan = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const plans = await getSafetyPlansByUser(userId, 1);
+        const plan = plans.length > 0 ? plans[0] : null;
+        res.json({ success: true, plan });
+    }
+    catch (err) {
+        next(err);
+    }
+};
 //# sourceMappingURL=clinical.controller.js.map

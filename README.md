@@ -7,7 +7,8 @@
 </p>
 
 <p align="center">
-  <a href="#features"><img src="https://img.shields.io/badge/Phase_5-Complete-brightgreen?style=flat-square" alt="Phase 5 Complete"/></a>
+  <a href="#features"><img src="https://img.shields.io/badge/Status-Production_Ready-brightgreen?style=flat-square" alt="Production Ready"/></a>
+  <a href="#roadmap"><img src="https://img.shields.io/badge/Phase_9-Complete-brightgreen?style=flat-square" alt="Phase 9 Complete"/></a>
   <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js"/>
   <img src="https://img.shields.io/badge/Express-5-000000?style=flat-square&logo=express" alt="Express"/>
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript"/>
@@ -30,21 +31,34 @@
 
 ### Core Functionality
 - **AI-Powered CBT Sessions** — Real-time therapeutic conversations using OpenAI GPT-4o-mini with a carefully crafted CBT system prompt
-- **RAG Knowledge Base** — Dynamically injects evidence-based clinical concepts (like the 15 cognitive distortions) into the AI's context based on conversation.
+- **RAG Knowledge Base** — Dynamically injects evidence-based clinical concepts (like the 15 cognitive distortions) into the AI's context using pgvector semantic search
 - **Thought Challenging** — Guided Socratic questioning to identify cognitive distortions
 - **Session Persistence** — Full conversation history with session management
-- **Clinical Toolkit** — Built-in Standardized Thought Records, Daily Mood Check-ins, and validated PHQ-9 (Depression) / GAD-7 (Anxiety) Screeners.
-- **Secure Authentication & Consent** — JWT-based auth with bcrypt password hashing, HTTP-only cookies, and Mandatory Informed Consent route-guards.
+- **Clinical Toolkit** — Built-in Standardized Thought Records, Daily Mood Check-ins, and validated PHQ-9 (Depression) / GAD-7 (Anxiety) Screeners
+- **Stanley-Brown Safety Planning** — Structured crisis safety plan wizard integrated directly into the app
+- **Informed Consent Gatekeeper** — Mandatory medical disclaimer acknowledgment before accessing any clinical tools or dashboard
+- **Secure Authentication** — JWT-based auth with bcrypt password hashing and HTTP-only cookies
+
+### Analytics & Progress Tracking
+- **Dashboard Analytics** — Dynamic visualizations of mood trends, screener history, and session engagement streaks
+- **Quick-Action Tiles** — One-click access to all clinical tools from the dashboard
+- **Session Activity Logs** — Timeline of recent therapeutic activity
+
+### Safety & Crisis Intervention
+- **Real-time Crisis Detection** — AI safety service monitors conversations for high-risk input
+- **Crisis Banner** — Immediate display of emergency resources when risk is detected
+- **Safety Event Audit Logs** — Admin-accessible logs of all crisis events for clinical oversight
+- **Admin Dashboard** — Role-based access control for system statistics and safety event management
 
 ### User Experience
-- **Modern Dashboard** — Quick access to sessions, conversation history, and CBT tools
+- **Modern Dashboard** — Dynamic analytics with mood trends, screener history, and engagement streaks
 - **Responsive Design** — Optimized for desktop and mobile
 - **Beautiful UI** — Gradient-rich landing page with smooth transitions
 - **Real-time Chat** — Instant AI responses with typing indicators
 
 ### Technical Highlights
 - **Cost-Optimized AI** — Configured with token limits, rate limiting, and monthly budget caps
-- **Configurable LLM** — Support for OpenAI API, local LLM (Ollama), or hybrid setups
+- **pgvector Semantic Search** — Vector embeddings power the clinical RAG knowledge retrieval
 - **SQL Injection Safe** — Parameterized queries throughout
 - **Docker-Ready** — One-command infrastructure setup
 
@@ -61,10 +75,6 @@
      :3000              │                  │────▶│ OpenAI API   │
                         └──────────────────┘     │ GPT-4o-mini  │
                              :3001               └──────────────┘
-                                                 ┌──────────────┐
-                                                 │ MinIO / S3   │
-                                                 │ Audio Storage│
-                                                 └──────────────┘
 ```
 
 ### Project Structure
@@ -77,10 +87,12 @@ cbt-ai-app/
 │       │   ├── page.tsx             # Landing page
 │       │   ├── login/page.tsx       # Login
 │       │   ├── signup/page.tsx      # Registration
-│       │   ├── dashboard/page.tsx   # User dashboard
-│       │   └── chat/[id]/page.tsx   # Chat interface
+│       │   ├── consent/page.tsx     # Informed Consent gate
+│       │   ├── dashboard/page.tsx   # Analytics dashboard
+│       │   ├── chat/[id]/page.tsx   # Chat interface
+│       │   └── tools/               # Clinical tools (mood, PHQ-9, GAD-7, thought records)
 │       ├── contexts/
-│       │   └── AuthContext.tsx       # Auth state management
+│       │   └── AuthContext.tsx       # Auth + consent state management
 │       └── lib/
 │           └── api.ts               # API client
 ├── backend/                 # Express.js API server
@@ -88,9 +100,13 @@ cbt-ai-app/
 │       ├── index.ts                 # Server entry
 │       ├── db.ts                    # Database connection
 │       ├── controllers/             # Request handlers
+│       │   ├── auth.controller.ts   # Auth + consent endpoints
+│       │   ├── analytics.controller.ts # Dashboard analytics
+│       │   └── admin.controller.ts  # Admin management
 │       ├── routes/                  # API routes
-│       ├── middleware/              # Auth, validation, errors
-│       └── services/               # OpenAI integration
+│       ├── middleware/              # Auth, admin, validation, errors
+│       ├── services/                # OpenAI + RAG + Safety services
+│       └── data/knowledge-base/     # Clinical RAG knowledge base
 ├── database/
 │   └── schema.sql                   # PostgreSQL schema
 ├── shared/                  # Shared TypeScript types
@@ -132,13 +148,11 @@ Edit `.env` and configure:
 | `DATABASE_URL` | PostgreSQL connection string |
 | `OPENAI_API_KEY` | Your OpenAI API key ([get one here](https://platform.openai.com/api-keys)) |
 | `JWT_SECRET` | Random secret for token signing |
-| `AWS_ACCESS_KEY_ID` | S3/MinIO access key |
-| `AWS_SECRET_ACCESS_KEY` | S3/MinIO secret key |
 
 ### 3. Start Infrastructure
 
 ```bash
-# Start PostgreSQL and MinIO via Docker
+# Start PostgreSQL via Docker
 docker-compose up -d
 
 # Verify services are running
@@ -166,7 +180,6 @@ npm run dev
 | Frontend | [http://localhost:3000](http://localhost:3000) |
 | Backend API | [http://localhost:3001](http://localhost:3001) |
 | Health Check | [http://localhost:3001/api/health](http://localhost:3001/api/health) |
-| MinIO Console | [http://localhost:9501](http://localhost:9501) |
 
 ---
 
@@ -174,7 +187,7 @@ npm run dev
 
 | Table | Purpose | Status |
 |-------|---------|--------|
-| `users` | Authentication & user profiles | ✅ Active |
+| `users` | Authentication, profiles & consent tracking | ✅ Active |
 | `conversations` | Chat session metadata | ✅ Active |
 | `messages` | Chat message history | ✅ Active |
 | `memories` | Journal entries & session summaries | ✅ Active |
@@ -183,7 +196,7 @@ npm run dev
 | `mood_checkins` | Daily mood tracking & emotion tagging | ✅ Active |
 | `phq9_responses` | Validated depression screening | ✅ Active |
 | `gad7_responses` | Validated anxiety screening | ✅ Active |
-| `safety_plans` | Stanley-Brown Safety Planning | ⏳ Setup in DB |
+| `safety_plans` | Stanley-Brown Safety Planning | ✅ Active |
 
 ---
 
@@ -193,10 +206,12 @@ npm run dev
 |---------|---------------|
 | Password Hashing | bcrypt (12 rounds) |
 | Authentication | JWT with HTTP-only cookies |
+| Informed Consent | Mandatory gatekeeper on all clinical routes |
 | Input Validation | express-validator |
 | SQL Safety | Parameterized queries |
 | CORS | Configured with credentials |
 | Resource Isolation | Per-user ownership checks |
+| Role-Based Access | `is_admin` flag with `requireAdmin` middleware |
 
 ---
 
@@ -205,12 +220,15 @@ npm run dev
 | Phase | Description | Status |
 |-------|-------------|--------|
 | **Phase 0** | Project Setup & Infrastructure | ✅ Complete |
-| **Phase 1** | Authentication & Basic Chat | ✅ Complete |
+| **Phase 1** | Authentication, Basic Chat & Informed Consent | ✅ Complete |
 | **Phase 2** | Voice Recording & Whisper Integration | ✅ Complete |
-| **Phase 3** | Memory & Journaling System | ✅ Complete |
+| **Phase 3** | Clinical Tools & RAG Service | ✅ Complete |
 | **Phase 4** | Crisis Detection & Safety System | ✅ Complete |
-| **Phase 5** | Admin Dashboard & Testing | ✅ Complete |
-| **Phase 6** | Vector Memory, Scaling & Deployment | ⏳ In Progress |
+| **Phase 5** | Admin Dashboard & RBAC | ✅ Complete |
+| **Phase 6** | pgvector & Semantic Search Integration | ✅ Complete |
+| **Phase 7** | Expanded Clinical RAG Knowledge Base | ✅ Complete |
+| **Phase 8** | Clinical Tools UI & API Integration | ✅ Complete |
+| **Phase 9** | Dashboard Analytics & Progress Tracking | ✅ Complete |
 
 ---
 
@@ -237,7 +255,7 @@ npm run test      # Run test suite
 ### Infrastructure
 
 ```bash
-docker-compose up -d      # Start PostgreSQL + MinIO
+docker-compose up -d      # Start PostgreSQL
 docker-compose down        # Stop all services
 docker-compose logs -f     # Stream service logs
 ```
@@ -282,7 +300,7 @@ See [CUSTOM_LLM_PLAN.md](./docs/CUSTOM_LLM_PLAN.md) for detailed local LLM setup
 If you or someone you know is in crisis, please reach out:
 
 | Resource | Contact |
-|----------|---------|
+|----------|---------| 
 | **Emergency Services** | 911 (US) or your local emergency number |
 | **Suicide & Crisis Lifeline** | **988** (US) |
 | **Crisis Text Line** | Text **HOME** to **741741** |

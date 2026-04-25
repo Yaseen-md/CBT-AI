@@ -15,6 +15,7 @@ import audioRoutes from './routes/audio.routes.js';
 import journalRoutes from './routes/journal.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import clinicalRoutes from './routes/clinical.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
 
 // Middleware imports
 import { errorHandler } from './middleware/error.middleware.js';
@@ -70,6 +71,7 @@ app.use('/api/audio', audioRoutes);
 app.use('/api/journal', journalRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/clinical', clinicalRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // ─── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);

@@ -87,6 +87,7 @@ export default function AdminDashboard() {
         if (user?.is_admin && token) {
             fetchData();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, token, showResolved]);
 
     const handleResolve = async (id: string) => {
@@ -100,7 +101,7 @@ export default function AdminDashboard() {
             setResolvingEvent(null);
             setResolveNotes('');
             fetchData(); // reload
-        } catch (err) {
+        } catch {
             alert('Failed to resolve event');
         }
     };
@@ -257,7 +258,7 @@ export default function AdminDashboard() {
                                             </div>
                                             
                                             <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 italic border-l-2 border-gray-300 whitespace-pre-wrap">
-                                                "{evt.snippet}"
+                                                &quot;{evt.snippet}&quot;
                                             </div>
 
                                             {evt.resolved && evt.notes && (

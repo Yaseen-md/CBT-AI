@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.middleware.js';
 import { upload } from '../middleware/upload.middleware.js';
-import { uploadAndTranscribe, deleteAudioFile } from '../controllers/audio.controller.js';
+import { uploadAndTranscribe } from '../controllers/audio.controller.js';
 
 const router = Router();
 
@@ -21,14 +21,6 @@ router.post(
     uploadAndTranscribe
 );
 
-/**
- * DELETE /api/audio/file?key=audio/userId/timestamp_random.webm
- * Delete audio file from storage (uses query param since S3 keys contain slashes)
- */
-router.delete(
-    '/file',
-    requireAuth,
-    deleteAudioFile
-);
+
 
 export default router;

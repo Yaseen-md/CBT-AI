@@ -152,8 +152,11 @@ Edit `.env` and configure:
 ### 3. Start Infrastructure
 
 ```bash
-# Start PostgreSQL via Docker
+# Start PostgreSQL and MinIO via Docker
 docker-compose up -d
+
+# Initialize MinIO bucket (Windows PowerShell)
+.\setup-minio-bucket.ps1
 
 # Verify services are running
 docker ps

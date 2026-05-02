@@ -33,17 +33,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         const savedToken = localStorage.getItem('cbt_token');
         if (savedToken) {
-            setToken(savedToken);
             apiFetch<{ success: boolean; user: User }>('/api/auth/me', {
                 token: savedToken,
             })
-                .then(({ user }) => setUser(user))
+                .then(({ user }) => {
+                    setToken(savedToken);
+                    setUser(user);
+                })
                 .catch(() => {
                     localStorage.removeItem('cbt_token');
                     setToken(null);
                 })
                 .finally(() => setIsLoading(false));
         } else {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsLoading(false);
         }
     }, []);

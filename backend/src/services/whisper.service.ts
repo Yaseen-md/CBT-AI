@@ -41,24 +41,4 @@ export const transcribeAudio = async (
     return extractText(response);
 };
 
-/**
- * Transcribe with additional context (optional)
- * Includes prompt for better accuracy with CBT terminology
- */
-export const transcribeWithContext = async (
-    audioBuffer: Buffer,
-    context?: string
-): Promise<string> => {
-    const blob = new Blob([audioBuffer], { type: 'audio/webm' });
-    const file = new File([blob], 'audio.webm', { type: 'audio/webm' });
 
-    const response = await openai.audio.transcriptions.create({
-        file,
-        model: process.env.WHISPER_MODEL || 'whisper-1',
-        language: 'en',
-        response_format: 'text',
-        prompt: context || 'Mental health, therapy, CBT, feelings, emotions',
-    });
-
-    return extractText(response);
-};

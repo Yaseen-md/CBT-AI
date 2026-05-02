@@ -100,7 +100,7 @@ export default function ChatPage() {
         }
     };
 
-    const handleAudioRecordingComplete = async (blob: Blob, duration: number) => {
+    const handleAudioRecordingComplete = async (blob: Blob) => {
         if (!token || !id) return;
 
         setIsUploadingAudio(true);
@@ -206,7 +206,7 @@ export default function ChatPage() {
                     <div className="text-center pt-16 text-gray-400">
                         <p className="text-5xl mb-3">💬</p>
                         <p className="font-medium text-gray-600">Start the conversation</p>
-                        <p className="text-sm mt-1">Tell me how you're feeling — I'm here to help.</p>
+                        <p className="text-sm mt-1">Tell me how you&apos;re feeling — I&apos;m here to help.</p>
                     </div>
                 )}
 

@@ -62,12 +62,6 @@ export default function Home() {
             >
               Start Your Session
             </Link>
-            <Link 
-              href="/about"
-              className="w-full sm:w-auto px-8 py-4 bg-white text-gray-700 rounded-full font-semibold hover:shadow-lg transition-all duration-300 border-2 border-gray-200"
-            >
-              Learn More
-            </Link>
           </div>
 
           {/* Features Grid */}
@@ -116,7 +110,7 @@ export default function Home() {
           <div className="mt-16 p-6 bg-amber-50 border border-amber-200 rounded-xl">
             <p className="text-sm text-amber-800">
               <strong>Important:</strong> CBT AI is an AI-powered support tool and is NOT a substitute for professional mental health care. 
-              If you're experiencing a crisis, please contact emergency services or call the National Suicide Prevention Lifeline at 988.
+              If you&apos;re experiencing a crisis, please contact emergency services or call the National Suicide Prevention Lifeline at 988.
             </p>
           </div>
         </div>
@@ -129,7 +123,6 @@ export default function Home() {
           <div className="mt-2 space-x-4">
             <Link href="/privacy" className="hover:text-gray-900">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-gray-900">Terms of Service</Link>
-            <Link href="/contact" className="hover:text-gray-900">Contact</Link>
           </div>
         </div>
       </footer>

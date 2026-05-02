@@ -5,7 +5,7 @@ import { AuthRequest } from '../middleware/auth.middleware.js';
 import { uploadAudio, generateAudioKey, deleteAudio } from '../services/minio.service.js';
 import { transcribeAudio } from '../services/whisper.service.js';
 import { generateReply, Message } from '../services/openai.service.js';
-import { detectCrisis, CRISIS_RESOURCES } from '../services/crisis.service.js';
+import { detectCrisis, getCrisisResources } from '../services/crisis.service.js';
 import { logSafetyEvent } from '../services/safety.service.js';
 
 interface UploadResponse {
@@ -91,10 +91,17 @@ export const uploadAndTranscribe = async (
                 }
 
                 if (crisisResult.requiresImmediateAction) {
+                    const userCountry = req.user!.country;
+                    const crisisResources = getCrisisResources(userCountry);
                     crisisData = {
                         severity: crisisResult.severity,
-                        resources: CRISIS_RESOURCES.resources,
-                        banner: CRISIS_RESOURCES.banner,
+                        crisisType: crisisResult.crisisType,
+                        requiresPsychiatricEscalation: crisisResult.requiresPsychiatricEscalation,
+                        resources: crisisResources.resources,
+                        banner: crisisResources.banner,
+                        psychiatricNote: crisisResult.requiresPsychiatricEscalation
+                            ? crisisResources.psychiatricNote
+                            : undefined,
                     };
                 }
             }
@@ -157,39 +164,4 @@ export const uploadAndTranscribe = async (
     }
 };
 
-/**
- * DELETE /api/audio/file?key=audio/userId/timestamp.webm
- * Delete audio file from storage (with ownership verification)
- */
-export const deleteAudioFile = async (
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction
-) => {
-    try {
-        const key = req.query.key as string;
-        const userId = req.user!.id;
 
-        if (!key) {
-            throw createError('Audio key is required (pass as ?key=...)', 400);
-        }
-
-        // Verify user owns this audio file by checking the messages table
-        const result = await query(
-            `SELECT m.id FROM messages m
-             JOIN conversations c ON m.conversation_id = c.id
-             WHERE m.audio_url LIKE $1 AND c.user_id = $2`,
-            [`%${key}%`, userId]
-        );
-
-        if (result.rows.length === 0) {
-            throw createError('Audio file not found or not authorized', 403);
-        }
-
-        await deleteAudio(key);
-
-        res.json({ success: true, message: 'Audio file deleted' });
-    } catch (err) {
-        next(err);
-    }
-};

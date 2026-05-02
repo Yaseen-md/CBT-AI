@@ -13,7 +13,7 @@ export default function SafetyPlanPage() {
     const [step, setStep] = useState(1);
     const [submitting, setSubmitting] = useState(false);
     const [loadingPlan, setLoadingPlan] = useState(true);
-    const [existingPlan, setExistingPlan] = useState<any | null>(null);
+    const [existingPlan, setExistingPlan] = useState<unknown | null>(null);
     const [viewMode, setViewMode] = useState<'create' | 'view'>('create');
 
     useEffect(() => {
@@ -188,17 +188,17 @@ export default function SafetyPlanPage() {
         );
     }
 
-    const handleStringChange = (index: number, value: string, setter: any, list: string[]) => {
+    const handleStringChange = (index: number, value: string, setter: (val: string[]) => void, list: string[]) => {
         const newList = [...list];
         newList[index] = value;
         setter(newList);
     };
 
-    const addStringItem = (setter: any, list: string[]) => {
+    const addStringItem = (setter: (val: string[]) => void, list: string[]) => {
         setter([...list, '']);
     };
 
-    const removeStringItem = (index: number, setter: any, list: string[]) => {
+    const removeStringItem = (index: number, setter: (val: string[]) => void, list: string[]) => {
         if (list.length > 1) {
             const newList = [...list];
             newList.splice(index, 1);
@@ -206,17 +206,17 @@ export default function SafetyPlanPage() {
         }
     };
 
-    const handleContactChange = (index: number, field: keyof ContactInfo, value: string, setter: any, list: ContactInfo[]) => {
+    const handleContactChange = (index: number, field: keyof ContactInfo, value: string, setter: (val: ContactInfo[]) => void, list: ContactInfo[]) => {
         const newList = [...list];
         newList[index] = { ...newList[index], [field]: value };
         setter(newList);
     };
 
-    const addContactItem = (setter: any, list: ContactInfo[], isProfessional = false) => {
+    const addContactItem = (setter: (val: ContactInfo[]) => void, list: ContactInfo[], isProfessional = false) => {
         setter([...list, isProfessional ? { name: '', phone: '', description: '' } : { name: '', phone: '' }]);
     };
 
-    const removeContactItem = (index: number, setter: any, list: ContactInfo[]) => {
+    const removeContactItem = (index: number, setter: (val: ContactInfo[]) => void, list: ContactInfo[]) => {
         if (list.length > 1) {
             const newList = [...list];
             newList.splice(index, 1);

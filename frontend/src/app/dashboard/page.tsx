@@ -51,7 +51,7 @@ export default function DashboardPage() {
     const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
     const [loadingJournal, setLoadingJournal] = useState(true);
     const [distortions, setDistortions] = useState<DistortionEntry[]>([]);
-    const [loadingDistortions, setLoadingDistortions] = useState(true);
+    const [, setLoadingDistortions] = useState(true);
 
     // Guard: redirect if not logged in or hasn't consented
     useEffect(() => {

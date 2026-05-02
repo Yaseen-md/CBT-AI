@@ -10,9 +10,7 @@ export const getMoodTrends = async (req: AuthRequest, res: Response, next: NextF
         const result = await query(
             `SELECT
                 DATE(created_at) as date,
-                mood_score,
-                COALESCE(energy_level, 5) as energy_level,
-                COALESCE(anxiety_level, 5) as anxiety_level
+                mood_score
             FROM mood_checkins
             WHERE user_id = $1
             ORDER BY created_at DESC
@@ -22,9 +20,7 @@ export const getMoodTrends = async (req: AuthRequest, res: Response, next: NextF
         // Reverse to get chronological order
         const trends = result.rows.reverse().map(row => ({
             date: row.date,
-            mood_score: parseInt(row.mood_score),
-            energy_level: parseInt(row.energy_level),
-            anxiety_level: parseInt(row.anxiety_level)
+            mood_score: parseInt(row.mood_score)
         }));
         res.json({ success: true, trends });
     } catch (err) {
@@ -93,7 +89,7 @@ export const getSessionStats = async (req: AuthRequest, res: Response, next: Nex
         );
 
         const journalResult = await query(
-            'SELECT COUNT(*) as count FROM journal_entries WHERE user_id = $1',
+            "SELECT COUNT(*) as count FROM memories WHERE user_id = $1 AND type = 'journal'",
             [userId]
         );
 
@@ -112,7 +108,7 @@ export const getSessionStats = async (req: AuthRequest, res: Response, next: Nex
             `SELECT MIN(created_at) as first_date FROM (
                 SELECT created_at FROM conversations WHERE user_id = $1
                 UNION ALL
-                SELECT created_at FROM journal_entries WHERE user_id = $1
+                SELECT created_at FROM memories WHERE user_id = $1 AND type = 'journal'
                 UNION ALL
                 SELECT created_at FROM mood_checkins WHERE user_id = $1
             ) all_sessions`,
@@ -129,7 +125,7 @@ export const getSessionStats = async (req: AuthRequest, res: Response, next: Nex
             `SELECT DISTINCT DATE(created_at) as activity_date FROM (
                 SELECT created_at FROM conversations WHERE user_id = $1
                 UNION ALL
-                SELECT created_at FROM journal_entries WHERE user_id = $1
+                SELECT created_at FROM memories WHERE user_id = $1 AND type = 'journal'
                 UNION ALL
                 SELECT created_at FROM mood_checkins WHERE user_id = $1
                 UNION ALL
@@ -214,7 +210,7 @@ export const getRecentActivity = async (req: AuthRequest, res: Response, next: N
                 created_at,
                 COALESCE(short_summary, 'Journal Entry') as title,
                 'Journal entry created' as summary
-            FROM journal_entries WHERE user_id = $1)
+            FROM memories WHERE user_id = $1 AND type = 'journal')
             UNION ALL
             (SELECT
                 'thought_record' as activity_type,

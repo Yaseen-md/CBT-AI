@@ -27,32 +27,24 @@ export const submitThoughtRecord = async (data: Partial<ThoughtRecord>) => {
     });
 };
 
-export const getThoughtRecords = async () => {
-    return apiFetch<{ success: boolean; records: ThoughtRecord[] }>('/api/clinical/thought-records', {
-        token: getToken(),
-    });
-};
+
 
 // --- MOOD CHECK-INS ---
 
 export const submitMoodCheckin = async (data: { mood_score: number; emotion_tags?: string[]; note?: string }) => {
-    return apiFetch<{ success: boolean; checkin: any }>('/api/clinical/mood-checkins', {
+    return apiFetch<{ success: boolean; checkin: unknown }>('/api/clinical/mood-checkins', {
         method: 'POST',
         token: getToken(),
         body: JSON.stringify(data),
     });
 };
 
-export const getMoodCheckins = async () => {
-    return apiFetch<{ success: boolean; checkins: any[] }>('/api/clinical/mood-checkins', {
-        token: getToken(),
-    });
-};
+
 
 // --- ASSESSMENTS ---
 
 export const submitPhq9 = async (scores: number[]) => {
-    return apiFetch<{ success: boolean; response: any }>('/api/clinical/assessments/phq9', {
+    return apiFetch<{ success: boolean; response: unknown }>('/api/clinical/assessments/phq9', {
         method: 'POST',
         token: getToken(),
         body: JSON.stringify({ scores }),
@@ -60,7 +52,7 @@ export const submitPhq9 = async (scores: number[]) => {
 };
 
 export const submitGad7 = async (scores: number[]) => {
-    return apiFetch<{ success: boolean; response: any }>('/api/clinical/assessments/gad7', {
+    return apiFetch<{ success: boolean; response: unknown }>('/api/clinical/assessments/gad7', {
         method: 'POST',
         token: getToken(),
         body: JSON.stringify({ scores }),
@@ -85,22 +77,18 @@ export interface SafetyPlanData {
 }
 
 export const submitSafetyPlan = async (data: SafetyPlanData) => {
-    return apiFetch<{ success: boolean; plan: any }>('/api/clinical/safety-plans', {
+    return apiFetch<{ success: boolean; plan: unknown }>('/api/clinical/safety-plans', {
         method: 'POST',
         token: getToken(),
         body: JSON.stringify(data),
     });
 };
 
-export const getSafetyPlans = async () => {
-    return apiFetch<{ success: boolean; plans: any[] }>('/api/clinical/safety-plans', {
-        token: getToken(),
-    });
-};
+
 
 // Get the user's latest safety plan
 export const getSafetyPlan = async () => {
-    return apiFetch<{ success: boolean; plan: any }>('/api/clinical/safety-plan/latest', {
+    return apiFetch<{ success: boolean; plan: unknown }>('/api/clinical/safety-plan/latest', {
         token: getToken(),
     });
 };

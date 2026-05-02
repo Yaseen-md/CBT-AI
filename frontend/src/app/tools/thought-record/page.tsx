@@ -17,7 +17,7 @@ export default function ThoughtRecordPage() {
     const [evidenceFor, setEvidenceFor] = useState('');
     const [evidenceAgainst, setEvidenceAgainst] = useState('');
     const [balancedThought, setBalancedThought] = useState('');
-    const [emotionAfter, setEmotionAfter] = useState('');
+    const [emotionAfter] = useState('');
     const [emotionAfterRating, setEmotionAfterRating] = useState(50);
     const [step, setStep] = useState(1);
     const [submitting, setSubmitting] = useState(false);
@@ -191,7 +191,7 @@ export default function ThoughtRecordPage() {
                                 <h2 className="text-xl font-semibold text-slate-800">Step 4: Restructure & Re-rate</h2>
                                 
                                 <div className="p-4 bg-primary-50 rounded-lg text-sm text-primary-900 border border-primary-100 mb-6">
-                                    <strong>Original Thought:</strong> "{automaticThought}"
+                                    <strong>Original Thought:</strong> &quot;{automaticThought}&quot;
                                 </div>
 
                                 <div>

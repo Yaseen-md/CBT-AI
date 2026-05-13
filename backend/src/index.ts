@@ -16,6 +16,7 @@ import journalRoutes from './routes/journal.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import clinicalRoutes from './routes/clinical.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 
 // Middleware imports
 import { errorHandler } from './middleware/error.middleware.js';
@@ -72,6 +73,7 @@ app.use('/api/journal', journalRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/clinical', clinicalRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // ─── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);

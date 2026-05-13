@@ -44,7 +44,7 @@ export const submitMoodCheckin = async (data: { mood_score: number; emotion_tags
 // --- ASSESSMENTS ---
 
 export const submitPhq9 = async (scores: number[]) => {
-    return apiFetch<{ success: boolean; response: unknown }>('/api/clinical/assessments/phq9', {
+    return apiFetch<{ success: boolean; response: { severity_label: string } }>('/api/clinical/assessments/phq9', {
         method: 'POST',
         token: getToken(),
         body: JSON.stringify({ scores }),
@@ -52,7 +52,7 @@ export const submitPhq9 = async (scores: number[]) => {
 };
 
 export const submitGad7 = async (scores: number[]) => {
-    return apiFetch<{ success: boolean; response: unknown }>('/api/clinical/assessments/gad7', {
+    return apiFetch<{ success: boolean; response: { severity_label: string } }>('/api/clinical/assessments/gad7', {
         method: 'POST',
         token: getToken(),
         body: JSON.stringify({ scores }),
@@ -88,7 +88,7 @@ export const submitSafetyPlan = async (data: SafetyPlanData) => {
 
 // Get the user's latest safety plan
 export const getSafetyPlan = async () => {
-    return apiFetch<{ success: boolean; plan: unknown }>('/api/clinical/safety-plan/latest', {
+    return apiFetch<{ success: boolean; plan: SafetyPlanData & { created_at: string } }>('/api/clinical/safety-plan/latest', {
         token: getToken(),
     });
 };

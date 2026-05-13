@@ -13,7 +13,7 @@ export default function SafetyPlanPage() {
     const [step, setStep] = useState(1);
     const [submitting, setSubmitting] = useState(false);
     const [loadingPlan, setLoadingPlan] = useState(true);
-    const [existingPlan, setExistingPlan] = useState<unknown | null>(null);
+    const [existingPlan, setExistingPlan] = useState<(SafetyPlanData & { created_at: string }) | null>(null);
     const [viewMode, setViewMode] = useState<'create' | 'view'>('create');
 
     useEffect(() => {

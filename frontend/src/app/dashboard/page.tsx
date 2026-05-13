@@ -1,10 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import useSWR from 'swr';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiFetch } from '../../lib/api';
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    AreaChart,
+    Area
+} from 'recharts';
 
 interface Conversation {
     id: string;
@@ -29,6 +41,35 @@ interface DistortionEntry {
     created_at: string;
 }
 
+interface PHQ9Entry {
+    total_score: number;
+    severity_label: string;
+    taken_at: string;
+}
+
+interface GAD7Entry {
+    total_score: number;
+    severity_label: string;
+    taken_at: string;
+}
+
+interface MoodEntry {
+    mood_score: number;
+    created_at: string;
+}
+
+interface DashboardData {
+    success: boolean;
+    data: {
+        conversations: Conversation[];
+        journalEntries: JournalEntry[];
+        distortions: DistortionEntry[];
+        phq9: PHQ9Entry[];
+        gad7: GAD7Entry[];
+        mood: MoodEntry[];
+    };
+}
+
 const DISTORTION_COLORS: Record<string, string> = {
     'catastrophizing': 'bg-red-100 text-red-700 border-red-200',
     'black-and-white thinking': 'bg-gray-100 text-gray-700 border-gray-200',
@@ -43,52 +84,31 @@ const DISTORTION_COLORS: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-    const { user, token, isLoading, logout } = useAuth();
+    const { user, token, isLoading: isAuthLoading, logout } = useAuth();
     const router = useRouter();
-    const [conversations, setConversations] = useState<Conversation[]>([]);
     const [isCreating, setIsCreating] = useState(false);
-    const [loadingConvs, setLoadingConvs] = useState(true);
-    const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-    const [loadingJournal, setLoadingJournal] = useState(true);
-    const [distortions, setDistortions] = useState<DistortionEntry[]>([]);
-    const [, setLoadingDistortions] = useState(true);
 
     // Guard: redirect if not logged in or hasn't consented
     useEffect(() => {
-        if (!isLoading) {
+        if (!isAuthLoading) {
             if (!user) router.push('/login');
             else if (!user.has_consented) router.push('/consent');
         }
-    }, [user, isLoading, router]);
+    }, [user, isAuthLoading, router]);
 
-    // Fetch conversations
-    useEffect(() => {
-        if (!token) return;
-        apiFetch<{ success: boolean; conversations: Conversation[] }>('/api/conversations', { token })
-            .then((data) => setConversations(data.conversations))
-            .catch(console.error)
-            .finally(() => setLoadingConvs(false));
-    }, [token]);
+    const fetcher = async (url: string) => {
+        if (!token) return null;
+        return apiFetch<DashboardData>(url, { token });
+    };
 
-    // Fetch recent journal entries
-    useEffect(() => {
-        if (!token) return;
-        apiFetch<{ success: boolean; memories: JournalEntry[] }>('/api/journal/recent?limit=3', { token })
-            .then((data) => setJournalEntries(data.memories))
-            .catch(console.error)
-            .finally(() => setLoadingJournal(false));
-    }, [token]);
-
-    // Fetch recent cognitive distortions
-    useEffect(() => {
-        if (!token) return;
-        apiFetch<{ success: boolean; memories: DistortionEntry[] }>('/api/journal/insights?limit=10', { token })
-            .then((data) => setDistortions(data.memories))
-            .catch(() => setDistortions([]))
-            .finally(() => setLoadingDistortions(false));
-    }, [token]);
+    const { data: dashboardResult, error, isLoading: isDataLoading } = useSWR(
+        token ? '/api/dashboard' : null,
+        fetcher,
+        { refreshInterval: 15000 } // Poll every 15 seconds
+    );
 
     const handleNewSession = async () => {
+        if (!token) return;
         setIsCreating(true);
         try {
             const data = await apiFetch<{ success: boolean; conversation: Conversation }>(
@@ -111,7 +131,7 @@ export default function DashboardPage() {
             minute: '2-digit',
         });
 
-    const formatJournalDate = (dateStr: string) =>
+    const formatShortDate = (dateStr: string) =>
         new Date(dateStr).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -122,12 +142,30 @@ export default function DashboardPage() {
         return DISTORTION_COLORS[lower] || 'bg-blue-100 text-blue-700 border-blue-200';
     };
 
+    const isLoading = isAuthLoading || (!dashboardResult && !error);
+    const dashboardData = dashboardResult?.data;
+
     // Aggregate distortions for unique display with counts
-    const aggregatedDistortions = distortions.reduce<Record<string, number>>((acc, d) => {
+    const aggregatedDistortions = (dashboardData?.distortions || []).reduce<Record<string, number>>((acc, d) => {
         const name = d.short_summary || 'Unknown';
         acc[name] = (acc[name] || 0) + 1;
         return acc;
     }, {});
+
+    // Prepare chart data
+    const moodChartData = (dashboardData?.mood || []).map(m => ({
+        date: formatShortDate(m.created_at),
+        score: m.mood_score
+    }));
+
+    const clinicalChartData = (dashboardData?.phq9 || []).map((p, index) => {
+        const g = dashboardData?.gad7?.[index];
+        return {
+            date: formatShortDate(p.taken_at),
+            phq9: p.total_score,
+            gad7: g ? g.total_score : null
+        };
+    });
 
     if (isLoading) {
         return (
@@ -137,11 +175,19 @@ export default function DashboardPage() {
         );
     }
 
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center text-red-500">Failed to load dashboard data. Please try again.</div>
+            </div>
+        );
+    }
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pb-10">
             {/* Navbar */}
             <header className="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-10">
-                <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center space-x-2">
                         <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-sm">🧠</span>
@@ -165,7 +211,7 @@ export default function DashboardPage() {
                 </div>
             </header>
 
-            <main className="max-w-5xl mx-auto px-6 py-10">
+            <main className="max-w-6xl mx-auto px-6 py-10">
                 {/* Hero greeting */}
                 <div className="mb-10">
                     <h1 className="text-3xl font-bold text-gray-900">
@@ -176,7 +222,6 @@ export default function DashboardPage() {
 
                 {/* Quick Actions Row */}
                 <div className="grid md:grid-cols-2 gap-4 mb-10">
-                    {/* Start session CTA */}
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-lg">
                         <div className="flex items-center justify-between">
                             <div>
@@ -193,7 +238,6 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Journal CTA */}
                     <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-6 text-white shadow-lg">
                         <div className="flex items-center justify-between">
                             <div>
@@ -207,6 +251,64 @@ export default function DashboardPage() {
                                 + New Entry
                             </Link>
                         </div>
+                    </div>
+                </div>
+
+                {/* Charts Section */}
+                <div className="grid lg:grid-cols-2 gap-8 mb-10">
+                    {/* Mood Trend Chart */}
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-100 p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Mood Trend (Last 30 Days)</h2>
+                        {moodChartData.length > 0 ? (
+                            <div className="h-64 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={moodChartData}>
+                                        <defs>
+                                            <linearGradient id="colorMood" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3}/>
+                                                <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                        <XAxis dataKey="date" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis domain={[0, 10]} stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                                        <Tooltip 
+                                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        />
+                                        <Area type="monotone" dataKey="score" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorMood)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        ) : (
+                            <div className="h-64 flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                Not enough data for mood trends yet.
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Clinical Scores Chart */}
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-100 p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">PHQ-9 & GAD-7 Progress</h2>
+                        {clinicalChartData.length > 0 ? (
+                            <div className="h-64 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={clinicalChartData}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                        <XAxis dataKey="date" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                                        <YAxis domain={[0, 27]} stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                                        <Tooltip 
+                                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        />
+                                        <Line type="monotone" dataKey="phq9" name="Depression (PHQ-9)" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                        <Line type="monotone" dataKey="gad7" name="Anxiety (GAD-7)" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        ) : (
+                            <div className="h-64 flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                Complete your first PHQ-9 or GAD-7 to see trends.
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -239,21 +341,17 @@ export default function DashboardPage() {
 
                 {/* Two-column layout for Sessions + Journal */}
                 <div className="grid lg:grid-cols-3 gap-8 mb-10">
-                    {/* Recent Sessions — takes 2 cols */}
+                    {/* Recent Sessions */}
                     <div className="lg:col-span-2">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Sessions</h2>
-                        {loadingConvs ? (
-                            <div className="flex items-center justify-center py-16">
-                                <div className="w-6 h-6 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                            </div>
-                        ) : conversations.length === 0 ? (
+                        {!dashboardData?.conversations?.length ? (
                             <div className="text-center py-16 bg-white/60 rounded-2xl border border-gray-100">
                                 <p className="text-4xl mb-3">💬</p>
                                 <p className="text-gray-500">No sessions yet. Start your first one above!</p>
                             </div>
                         ) : (
                             <div className="grid gap-3">
-                                {conversations.map((conv) => (
+                                {dashboardData.conversations.map((conv) => (
                                     <Link
                                         key={conv.id}
                                         href={`/chat/${conv.id}`}
@@ -279,7 +377,7 @@ export default function DashboardPage() {
                         )}
                     </div>
 
-                    {/* Journal sidebar — takes 1 col */}
+                    {/* Journal sidebar */}
                     <div>
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-semibold text-gray-900">Journal</h2>
@@ -287,11 +385,7 @@ export default function DashboardPage() {
                                 View All →
                             </Link>
                         </div>
-                        {loadingJournal ? (
-                            <div className="flex items-center justify-center py-10">
-                                <div className="w-5 h-5 border-3 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                            </div>
-                        ) : journalEntries.length === 0 ? (
+                        {!dashboardData?.journalEntries?.length ? (
                             <div className="bg-white/60 rounded-2xl border border-gray-100 p-6 text-center">
                                 <p className="text-3xl mb-2">📔</p>
                                 <p className="text-sm text-gray-500 mb-3">No journal entries yet</p>
@@ -304,13 +398,13 @@ export default function DashboardPage() {
                             </div>
                         ) : (
                             <div className="grid gap-3">
-                                {journalEntries.map((entry) => (
+                                {dashboardData.journalEntries.map((entry) => (
                                     <Link
                                         key={entry.id}
                                         href={`/journal/${entry.id}`}
                                         className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-100 hover:shadow-md hover:border-amber-200 transition-all group"
                                     >
-                                        <p className="text-xs text-gray-400 mb-1">{formatJournalDate(entry.created_at)}</p>
+                                        <p className="text-xs text-gray-400 mb-1">{formatShortDate(entry.created_at)}</p>
                                         <p className="text-sm font-medium text-gray-900 group-hover:text-amber-700 transition-colors line-clamp-2">
                                             {entry.short_summary || entry.full_text?.substring(0, 80)}
                                         </p>
@@ -337,7 +431,7 @@ export default function DashboardPage() {
                 {Object.keys(aggregatedDistortions).length > 0 && (
                     <div className="mb-10">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">Session Insights</h2>
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-100 p-6">
+                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-100 p-6 shadow-sm">
                             <p className="text-sm text-gray-600 mb-4">
                                 Cognitive patterns identified across your recent sessions:
                             </p>
@@ -361,4 +455,3 @@ export default function DashboardPage() {
         </div>
     );
 }
-
